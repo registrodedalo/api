@@ -1,0 +1,19 @@
+{
+  "name": "dedalo-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "body-parser": "~1.13.1",
+    "compression": "^1.6.0",
+    "express": "~4.13.0",
+    "morgan": "~1.6.1",
+    "mysql": "^2.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.8.1"
+  }
+}
