@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "mocha",
+    "lint": "jshint .",
+    "cs": "jscs ."
   },
   "dependencies": {
     "body-parser": "~1.13.1",
@@ -14,6 +17,10 @@
     "mysql": "^2.9.0"
   },
   "devDependencies": {
+    "chai": "^3.4.1",
+    "jscs": "^2.5.1",
+    "jshint": "^2.8.0",
+    "mocha": "^2.3.3",
     "nodemon": "^1.8.1"
   }
 }
