@@ -65,13 +65,14 @@ app.use(bodyParser.json());
 app.use(function(req, res, next) {
 	res.sendData = function(data) {
 		// Handle the optional first parameter
+		var code;
 		if (arguments.length == 2) {
-			var code = arguments[0];
-			var data = arguments[1];
+			code = arguments[0];
+			data = arguments[1];
 		}
 		else {
 			// Default response code is 200 OK
-			var code = 200;
+			code = 200;
 		}
 		
 		res.status(code);
