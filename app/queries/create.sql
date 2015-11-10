@@ -5,6 +5,12 @@ DEFAULT COLLATE = 'utf8_general_ci';
 
 USE dedalo;
 
+-- Created by Vertabelo (http://vertabelo.com)
+-- Last modification date: 2015-11-10 20:31:28.464
+
+
+
+
 -- tables
 -- Table AnniScolastici
 CREATE TABLE AnniScolastici (
@@ -20,10 +26,21 @@ CREATE TABLE AnniScolastici (
 CREATE TABLE Assenze (
     ID int  NOT NULL  AUTO_INCREMENT,
     Data date  NOT NULL,
-    Giustificata bool  NOT NULL  DEFAULT false,
-    IDInsegnante int  NOT NULL,
     IDStudente int  NOT NULL,
+    IDGiustificazione int  NULL,
     CONSTRAINT Assenze_pk PRIMARY KEY (ID)
+);
+
+-- Table Calendario
+CREATE TABLE Calendario (
+    ID int  NOT NULL  AUTO_INCREMENT,
+    Tipo int  NOT NULL,
+    Data date  NOT NULL,
+    IDMateria int  NOT NULL,
+    IDOraLezione int  NULL,
+    IDInsegnante int  NOT NULL,
+    Descrizione text  NOT NULL,
+    CONSTRAINT Calendario_pk PRIMARY KEY (ID)
 );
 
 -- Table Classi
@@ -36,11 +53,11 @@ CREATE TABLE Classi (
     CONSTRAINT Classi_pk PRIMARY KEY (ID)
 );
 
--- Table CollaboratoreScolastico
-CREATE TABLE CollaboratoreScolastico (
+-- Table CollaboratoriScolastici
+CREATE TABLE CollaboratoriScolastici (
     ID int  NOT NULL  AUTO_INCREMENT,
     IDUtente int  NOT NULL,
-    CONSTRAINT CollaboratoreScolastico_pk PRIMARY KEY (ID)
+    CONSTRAINT CollaboratoriScolastici_pk PRIMARY KEY (ID)
 );
 
 -- Table Comunicazioni
@@ -72,14 +89,21 @@ CREATE TABLE Genitori (
     CONSTRAINT Genitori_pk PRIMARY KEY (ID)
 );
 
+-- Table Giustificazioni
+CREATE TABLE Giustificazioni (
+    ID int  NOT NULL  AUTO_INCREMENT,
+    IDInsegnante int  NOT NULL,
+    Data datetime  NOT NULL,
+    CONSTRAINT Giustificazioni_pk PRIMARY KEY (ID)
+);
+
 -- Table IngressiUscite
 CREATE TABLE IngressiUscite (
     ID int  NOT NULL  AUTO_INCREMENT,
     Tipo int  NOT NULL,
     Data timestamp  NOT NULL,
-    Giustificata bool  NOT NULL  DEFAULT false,
-    IDInsegnante int  NOT NULL,
     IDStudente int  NOT NULL,
+    IDGiustificazione int  NULL,
     CONSTRAINT IngressiUscite_pk PRIMARY KEY (ID)
 );
 
@@ -91,6 +115,19 @@ CREATE TABLE Insegnanti (
     IDUtente int  NOT NULL,
     IDScuola int  NOT NULL,
     CONSTRAINT Insegnanti_pk PRIMARY KEY (ID)
+);
+
+-- Table Lezioni
+CREATE TABLE Lezioni (
+    ID int  NOT NULL  AUTO_INCREMENT,
+    IDInsegnante int  NOT NULL,
+    IDClasse int  NOT NULL,
+    Argomento text  NOT NULL,
+    Data date  NOT NULL,
+    Ora int  NOT NULL,
+    Creazione datetime  NOT NULL,
+    Aggiornamento datetime  NOT NULL,
+    CONSTRAINT Lezioni_pk PRIMARY KEY (ID)
 );
 
 -- Table Materie
@@ -110,6 +147,18 @@ CREATE TABLE NoteClasse (
     IDInsegnante int  NOT NULL,
     IDClasse int  NOT NULL,
     CONSTRAINT NoteClasse_pk PRIMARY KEY (ID)
+);
+
+-- Table OreLezione
+CREATE TABLE OreLezione (
+    ID int  NOT NULL  AUTO_INCREMENT,
+    Ora int  NOT NULL,
+    Inizio time  NOT NULL,
+    Fine time  NOT NULL,
+    IDMateria int  NOT NULL,
+    IDClasse int  NOT NULL,
+    Note text  NULL,
+    CONSTRAINT OreLezione_pk PRIMARY KEY (ID)
 );
 
 -- Table RelClassiComunicazioni
@@ -142,6 +191,13 @@ CREATE TABLE RelMaterieInsegnanti (
     CONSTRAINT RelMaterieInsegnanti_pk PRIMARY KEY (IDMateria,IDInsegnante)
 );
 
+-- Table RelOreLezioneInsegnanti
+CREATE TABLE RelOreLezioneInsegnanti (
+    IDOraLezione int  NOT NULL,
+    IDInsegnante int  NOT NULL,
+    CONSTRAINT RelOreLezioneInsegnanti_pk PRIMARY KEY (IDOraLezione,IDInsegnante)
+);
+
 -- Table RelStudentiAnniScolastici
 CREATE TABLE RelStudentiAnniScolastici (
     IDStudente int  NOT NULL,
@@ -152,8 +208,8 @@ CREATE TABLE RelStudentiAnniScolastici (
 -- Table RelStudentiNote
 CREATE TABLE RelStudentiNote (
     IDNoteClasse int  NOT NULL,
-    IDStudenti int  NOT NULL,
-    CONSTRAINT RelStudentiNote_pk PRIMARY KEY (IDNoteClasse,IDStudenti)
+    IDStudente int  NOT NULL,
+    CONSTRAINT RelStudentiNote_pk PRIMARY KEY (IDNoteClasse,IDStudente)
 );
 
 -- Table Scuole
@@ -188,6 +244,7 @@ CREATE TABLE Utenti (
     Password binary(60)  NOT NULL,
     U2FEnabled bool  NOT NULL  DEFAULT false,
     U2F text  NULL,
+    TokenVersions json  NULL,
     CONSTRAINT Utenti_pk PRIMARY KEY (ID)
 );
 
@@ -220,16 +277,31 @@ CREATE TABLE Voti (
 
 ALTER TABLE AnniScolastici ADD CONSTRAINT AnniScolastici_Scuole FOREIGN KEY AnniScolastici_Scuole (IDScuola)
     REFERENCES Scuole (ID);
--- Reference:  Assenze_Professori (table: Assenze)
+-- Reference:  Assenze_Giustificazioni (table: Assenze)
 
 
-ALTER TABLE Assenze ADD CONSTRAINT Assenze_Professori FOREIGN KEY Assenze_Professori (IDInsegnante)
-    REFERENCES Insegnanti (ID);
+ALTER TABLE Assenze ADD CONSTRAINT Assenze_Giustificazioni FOREIGN KEY Assenze_Giustificazioni (IDGiustificazione)
+    REFERENCES Giustificazioni (ID);
 -- Reference:  Assenze_Studenti (table: Assenze)
 
 
 ALTER TABLE Assenze ADD CONSTRAINT Assenze_Studenti FOREIGN KEY Assenze_Studenti (IDStudente)
     REFERENCES Studenti (ID);
+-- Reference:  CalendarioVerifiche_Insegnanti (table: Calendario)
+
+
+ALTER TABLE Calendario ADD CONSTRAINT CalendarioVerifiche_Insegnanti FOREIGN KEY CalendarioVerifiche_Insegnanti (IDInsegnante)
+    REFERENCES Insegnanti (ID);
+-- Reference:  CalendarioVerifiche_Materie (table: Calendario)
+
+
+ALTER TABLE Calendario ADD CONSTRAINT CalendarioVerifiche_Materie FOREIGN KEY CalendarioVerifiche_Materie (IDMateria)
+    REFERENCES Materie (ID);
+-- Reference:  CalendarioVerifiche_OreLezione (table: Calendario)
+
+
+ALTER TABLE Calendario ADD CONSTRAINT CalendarioVerifiche_OreLezione FOREIGN KEY CalendarioVerifiche_OreLezione (IDOraLezione)
+    REFERENCES OreLezione (ID);
 -- Reference:  Classi_AnniScolastici (table: Classi)
 
 
@@ -240,10 +312,10 @@ ALTER TABLE Classi ADD CONSTRAINT Classi_AnniScolastici FOREIGN KEY Classi_AnniS
 
 ALTER TABLE Classi ADD CONSTRAINT Classi_Scuola FOREIGN KEY Classi_Scuola (IDScuola)
     REFERENCES Scuole (ID);
--- Reference:  CollaboratoreScolastico_Utenti (table: CollaboratoreScolastico)
+-- Reference:  CollaboratoreScolastico_Utenti (table: CollaboratoriScolastici)
 
 
-ALTER TABLE CollaboratoreScolastico ADD CONSTRAINT CollaboratoreScolastico_Utenti FOREIGN KEY CollaboratoreScolastico_Utenti (IDUtente)
+ALTER TABLE CollaboratoriScolastici ADD CONSTRAINT CollaboratoreScolastico_Utenti FOREIGN KEY CollaboratoreScolastico_Utenti (IDUtente)
     REFERENCES Utenti (ID);
 -- Reference:  Dispostivi_Utenti (table: Dispostivi)
 
@@ -255,16 +327,31 @@ ALTER TABLE Dispostivi ADD CONSTRAINT Dispostivi_Utenti FOREIGN KEY Dispostivi_U
 
 ALTER TABLE Genitori ADD CONSTRAINT Genitori_Utenti FOREIGN KEY Genitori_Utenti (IDUtente)
     REFERENCES Utenti (ID);
--- Reference:  IngressiUscite_Professori (table: IngressiUscite)
+-- Reference:  Giustificazioni_Insegnanti (table: Giustificazioni)
 
 
-ALTER TABLE IngressiUscite ADD CONSTRAINT IngressiUscite_Professori FOREIGN KEY IngressiUscite_Professori (IDInsegnante)
+ALTER TABLE Giustificazioni ADD CONSTRAINT Giustificazioni_Insegnanti FOREIGN KEY Giustificazioni_Insegnanti (IDInsegnante)
     REFERENCES Insegnanti (ID);
+-- Reference:  IngressiUscite_Giustificazioni (table: IngressiUscite)
+
+
+ALTER TABLE IngressiUscite ADD CONSTRAINT IngressiUscite_Giustificazioni FOREIGN KEY IngressiUscite_Giustificazioni (IDGiustificazione)
+    REFERENCES Giustificazioni (ID);
 -- Reference:  IngressiUscite_Studenti (table: IngressiUscite)
 
 
 ALTER TABLE IngressiUscite ADD CONSTRAINT IngressiUscite_Studenti FOREIGN KEY IngressiUscite_Studenti (IDStudente)
     REFERENCES Studenti (ID);
+-- Reference:  Lezioni_Classi (table: Lezioni)
+
+
+ALTER TABLE Lezioni ADD CONSTRAINT Lezioni_Classi FOREIGN KEY Lezioni_Classi (IDClasse)
+    REFERENCES Classi (ID);
+-- Reference:  Lezioni_Insegnanti (table: Lezioni)
+
+
+ALTER TABLE Lezioni ADD CONSTRAINT Lezioni_Insegnanti FOREIGN KEY Lezioni_Insegnanti (IDInsegnante)
+    REFERENCES Insegnanti (ID);
 -- Reference:  Materie_Classi (table: Materie)
 
 
@@ -280,6 +367,16 @@ ALTER TABLE NoteClasse ADD CONSTRAINT NoteClasse_Classi FOREIGN KEY NoteClasse_C
 
 ALTER TABLE NoteClasse ADD CONSTRAINT NoteClasse_Professori FOREIGN KEY NoteClasse_Professori (IDInsegnante)
     REFERENCES Insegnanti (ID);
+-- Reference:  OreLezione_Classi (table: OreLezione)
+
+
+ALTER TABLE OreLezione ADD CONSTRAINT OreLezione_Classi FOREIGN KEY OreLezione_Classi (IDClasse)
+    REFERENCES Classi (ID);
+-- Reference:  OreLezione_Materie (table: OreLezione)
+
+
+ALTER TABLE OreLezione ADD CONSTRAINT OreLezione_Materie FOREIGN KEY OreLezione_Materie (IDMateria)
+    REFERENCES Materie (ID);
 -- Reference:  Professori_Scuole (table: Insegnanti)
 
 
@@ -335,6 +432,16 @@ ALTER TABLE RelMaterieInsegnanti ADD CONSTRAINT RelMaterieProfessori_Materie FOR
 
 ALTER TABLE RelMaterieInsegnanti ADD CONSTRAINT RelMaterieProfessori_Professori FOREIGN KEY RelMaterieProfessori_Professori (IDInsegnante)
     REFERENCES Insegnanti (ID);
+-- Reference:  RelOreLezioneInsegnanti_Insegnanti (table: RelOreLezioneInsegnanti)
+
+
+ALTER TABLE RelOreLezioneInsegnanti ADD CONSTRAINT RelOreLezioneInsegnanti_Insegnanti FOREIGN KEY RelOreLezioneInsegnanti_Insegnanti (IDInsegnante)
+    REFERENCES Insegnanti (ID);
+-- Reference:  RelOreLezioneInsegnanti_OreLezione (table: RelOreLezioneInsegnanti)
+
+
+ALTER TABLE RelOreLezioneInsegnanti ADD CONSTRAINT RelOreLezioneInsegnanti_OreLezione FOREIGN KEY RelOreLezioneInsegnanti_OreLezione (IDOraLezione)
+    REFERENCES OreLezione (ID);
 -- Reference:  RelStudentiAnniScolastici_AnniScolastici (table: RelStudentiAnniScolastici)
 
 
@@ -353,7 +460,7 @@ ALTER TABLE RelStudentiNote ADD CONSTRAINT RelStudentiNote_NoteClasse FOREIGN KE
 -- Reference:  RelStudentiNote_Studenti (table: RelStudentiNote)
 
 
-ALTER TABLE RelStudentiNote ADD CONSTRAINT RelStudentiNote_Studenti FOREIGN KEY RelStudentiNote_Studenti (IDStudenti)
+ALTER TABLE RelStudentiNote ADD CONSTRAINT RelStudentiNote_Studenti FOREIGN KEY RelStudentiNote_Studenti (IDStudente)
     REFERENCES Studenti (ID);
 -- Reference:  Studenti_Classi (table: Studenti)
 
@@ -379,4 +486,3 @@ ALTER TABLE Voti ADD CONSTRAINT Voti_Verifiche FOREIGN KEY Voti_Verifiche (IDVer
 
 
 -- End of file.
-
