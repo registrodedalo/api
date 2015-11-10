@@ -9,6 +9,8 @@ var compress   = require('compression');
 
 // REST errors for responses
 var errors     = require('./errors');
+// User model
+var User       = require('./models/user.js');
 
 // Create the Express application
 var app = express();
@@ -55,10 +57,41 @@ app.use(function(req, res, next) {
 	}
 });
 
-// TODO: check auth
-
 // Parse the JSON body, if any
 app.use(bodyParser.json());
+
+// Check auth
+app.use(function(req, res, next) {
+	var token = req.header('Auth-Token');
+	
+	if (token) {
+		// Verify if the token is valid
+		User.verify(token, function(err, user) {
+			// Ops, something wrong with the token!
+			if (err) {
+				var e;
+				if (err == 'tokenError') {
+					e = new errors.SessionError();
+				}
+				else {
+					e = new errors.InternalServerError();
+				}
+				
+				next(e);
+			}
+			else {
+				// Store the user for later use
+				req.user = user;
+				next();
+			}
+		});
+	}
+	else {
+		// Missing Auth-Token error
+		var err = new errors.MissingHeaderError('Auth-Token');
+		next(err);
+	}
+});
 
 // Inject sendData function to response object
 // for sending JSON responses with a JavaScript object
@@ -100,7 +133,6 @@ app.use(function(req, res, next) {
 // Log error to console
 // TODO: log with winston
 app.use(function(err, req, res, next) {
-	console.error(err);
 	next(err);
 });
 

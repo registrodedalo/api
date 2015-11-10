@@ -1,5 +1,5 @@
 var mysql   = require('mysql');
-var config  = require('./config.json');
+var config  = require('../config.json');
 var queries = require('./queries');
 
 // Create MySQL connection
@@ -21,17 +21,17 @@ db.connect(function(err) {
 	console.log('Connected as id ' + db.threadId + ' to database ' + config.database['database']);
 });
 
-// EXAMPLE
-// Temp
-function getClassi(callback) {
-	var query = queries.get('classi');
-	
-	db.query(query, function(err, rows) {
-		// TODO: handle error
-		console.error(err);
+function query(options, callback) {
+	db.query(options, function(err, results, fields) {
+		if (err) {
+			// TODO: log the error...
+			callback(true);
+			return;
+		}
 		
-		callback(null, rows);
+		callback(null, results, fields);
 	});
 }
 
-module.exports.getClassi = getClassi;
+module.exports.query = query;
+module.exports.queries = queries;
