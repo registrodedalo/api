@@ -18,7 +18,7 @@ function verify(token, callback) {
 		var jti = +payload['jti'];
 		var platform = payload['t'];
 		
-		if (   isNaN(id)
+		if (isNaN(id)
 			|| typeof username !== 'string'
 			|| isNaN(jti)
 			|| typeof platform !== 'string'
