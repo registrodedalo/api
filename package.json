@@ -10,6 +10,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "bcrypt": "^0.8.5",
     "body-parser": "~1.13.1",
     "commander": "^2.9.0",
     "compression": "^1.6.0",

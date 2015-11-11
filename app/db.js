@@ -25,6 +25,7 @@ function query(options, callback) {
 	db.query(options, function(err, results, fields) {
 		if (err) {
 			// TODO: log the error...
+			console.error(err);
 			callback(true);
 			return;
 		}

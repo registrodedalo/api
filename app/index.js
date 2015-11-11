@@ -57,42 +57,6 @@ app.use(function(req, res, next) {
 	}
 });
 
-// Parse the JSON body, if any
-app.use(bodyParser.json());
-
-// Check auth
-app.use(function(req, res, next) {
-	var token = req.header('Auth-Token');
-	
-	if (token) {
-		// Verify if the token is valid
-		User.verify(token, function(err, user) {
-			// Ops, something wrong with the token!
-			if (err) {
-				var e;
-				if (err == 'tokenError') {
-					e = new errors.SessionError();
-				}
-				else {
-					e = new errors.InternalServerError();
-				}
-				
-				next(e);
-			}
-			else {
-				// Store the user for later use
-				req.user = user;
-				next();
-			}
-		});
-	}
-	else {
-		// Missing Auth-Token error
-		var err = new errors.MissingHeaderError('Auth-Token');
-		next(err);
-	}
-});
-
 // Inject sendData function to response object
 // for sending JSON responses with a JavaScript object
 app.use(function(req, res, next) {
@@ -120,6 +84,96 @@ app.use(function(req, res, next) {
 	next();
 });
 
+// Parse the JSON body, if any
+app.use(bodyParser.json());
+
+// Authenticate
+app.post('/auth/sign', function(req, res, next) {
+	var username = req.body.username;
+	var password = req.body.password;
+	var did = req.body.did;
+	
+	if (!username) {
+		var err = new errors.MissingFieldError('username');
+		next(err);
+		return;
+	}
+	
+	if (!password) {
+		var err1 = new errors.MissingFieldError('password');
+		next(err1);
+		return;
+	}
+		
+	var params = {
+		username: username,
+		password: password
+	};
+	
+	var re = /^[0-9]+$/;
+	if (did && re.test(did)) {
+		params['did'] = did;
+	}
+	
+	User.authenticate(params, function(err, token) {
+		if (err) {
+			var e;
+			if (err == 'wrongUsername') {
+				e = new errors.WrongUsernameError();
+			}
+			else if (err == 'wrongPassword') {
+				e = new errors.WrongPasswordError();
+			}
+			else {
+				e = new errors.InternalServerError();
+			}
+			
+			next(e);
+			return;
+		}
+		
+		var response = {
+			token: token
+		};
+		
+		res.sendData(200, response);
+	});
+});
+
+// Check auth
+app.use(function(req, res, next) {
+	var token = req.header('Auth-Token');
+	
+	if (!token) {
+		// Missing Auth-Token error
+		var err = new errors.MissingHeaderError('Auth-Token');
+		next(err);
+		return;
+	}
+	
+	// Verify if the token is valid
+	User.verify(token, function(err, user, did) {
+		// Ops, something wrong with the token!
+		if (err) {
+			var e;
+			if (err == 'tokenError') {
+				e = new errors.SessionError();
+			}
+			else {
+				e = new errors.InternalServerError();
+			}
+			
+			next(e);
+			return;
+		}
+		
+		// Store the user for later use
+		req.user = user;
+		req.did = did;
+		next();
+	});
+});
+
 // Routes
 var api = require('./routes');
 app.use('/v1', api);
@@ -133,14 +187,21 @@ app.use(function(req, res, next) {
 // Log error to console
 // TODO: log with winston
 app.use(function(err, req, res, next) {
+	console.log(JSON.stringify(err));
 	next(err);
 });
 
 // Send response with error
 app.use(function(err, req, res, next) {
-	if (!err.statusCode) {
-		// Set the default status code for errors
-		err.statusCode = 500;
+	if (!err.code || !err.message) {
+		// Wrong JSON
+		if (err.body && err.status == 400) {
+			err = new errors.InvalidJSONError();
+		}
+		// Generic server error
+		else {
+			err = new errors.InternalServerError();
+		}
 	}
 	
 	res.status(err.statusCode);
