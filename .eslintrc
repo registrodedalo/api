@@ -19,7 +19,8 @@
         "guard-for-in": 2,
         "no-spaced-func": 2,
         "no-trailing-spaces": [2, { "skipBlankLines": true }],
-        "handle-callback-err": 2
+        "handle-callback-err": 2,
+        "comma-spacing": [2, {"before": false, "after": true}]
     },
     "env": {
         "node": true,
