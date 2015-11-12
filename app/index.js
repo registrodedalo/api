@@ -51,7 +51,9 @@ app.use(function(req, res, next) {
 	try {
 		parsed = contentType.parse(header);
 	}
-	catch (e) { }
+	catch (e) {
+		// Parse error
+	}
 	
 	// If the header is invalid or the type is not JSON...
 	if (!parsed || parsed.type != 'application/json') {
