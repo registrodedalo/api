@@ -106,7 +106,7 @@ app.use(function(req, res, next) {
 app.use(bodyParser.json());
 
 // Authenticate
-app.post('/auth/sign', function(req, res, next) {
+app.post('/v1/auth/sign', function(req, res, next) {
 	var username = req.body.username;
 	var password = req.body.password;
 	var did = req.body.did;
@@ -133,7 +133,7 @@ app.post('/auth/sign', function(req, res, next) {
 		params['did'] = did;
 	}
 	
-	User.authenticate(params, function(err, token) {
+	User.authenticate(params, function(err, response) {
 		if (err) {
 			var e;
 			if (err == 'wrongUsername') {
@@ -149,10 +149,6 @@ app.post('/auth/sign', function(req, res, next) {
 			next(e);
 			return;
 		}
-		
-		var response = {
-			token: token
-		};
 		
 		res.sendData(200, response);
 	});
