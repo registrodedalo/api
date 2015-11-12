@@ -1,11 +1,13 @@
 // HTTP server
-var express    = require('express');
+var express     = require('express');
 // Requests logging
-var morgan     = require('morgan');
+var morgan      = require('morgan');
 // Express middleware for requests body parsing
-var bodyParser = require('body-parser');
+var bodyParser  = require('body-parser');
 // Express middleware for responses GZIP compression
-var compress   = require('compression');
+var compress    = require('compression');
+// Content-Type header parser
+var contentType = require('content-type');
 
 // REST errors for responses
 var errors     = require('./errors');
@@ -36,9 +38,23 @@ app.use(function(req, res, next) {
 // Allow only JSON bodies
 //  --> check Content-Type header
 app.use(function(req, res, next) {
-	var contentType = req.header('Content-Type');
+	var header = req.header('Content-Type');
 	
-	if (contentType && contentType != 'application/json') {
+	// Missing Content-Type header is ok for GET requests
+	if (!header) {
+		next();
+		return;
+	}
+	
+	var parsed = null;
+	// Try to parse the Content-Type string
+	try {
+		parsed = contentType.parse(header);
+	}
+	catch (e) { }
+	
+	// If the header is invalid or the type is not JSON...
+	if (!parsed || parsed.type != 'application/json') {
 		next(new errors.UnsupportedMediaTypeError());
 	}
 	else {
