@@ -1,3 +1,5 @@
+-- /auth/sign
+
 SELECT
 	ID,
 	Username,

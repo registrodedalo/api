@@ -5,6 +5,11 @@ var db     = require('../db.js');
 var config = require('../../config.json');
 var secret = config['secret'];
 
+/**
+ * Verify the token sent in the Auth-Token header
+ * @param  {String}   token
+ * @param  {Function} callback
+ */
 function verify(token, callback) {
 	// Decode the token
 	jwt.verify(token, secret, function(err, payload) {
@@ -71,12 +76,20 @@ function verify(token, callback) {
 	});
 }
 
+/**
+ * Check params['username'] and params['password'],
+ * generate a new token for the device (params['did'] optional)
+ * 
+ * @param  {Object}   params
+ * @param  {Function} callback
+ */
 function authenticate(params, callback) {
 	var query = {
 		sql: db.queries.get('getUserByUsername'),
 		values: [params['username']]
 	};
 	
+	// Get the user, if it exists
 	db.query(query, function(err, res) {
 		if (err) {
 			callback('serverError');
@@ -91,6 +104,7 @@ function authenticate(params, callback) {
 		var user = res[0];
 		var hash = user['Password'].toString('ascii');
 		
+		// Compare the plain-text password and the hash
 		bcrypt.compare(params['password'], hash, function(err, ok) {
 			if (err) {
 				console.error(err);
@@ -99,6 +113,7 @@ function authenticate(params, callback) {
 			}
 			
 			if (ok === true) {
+				// Yeah :) generate the token
 				generateToken(user, params['did'], callback);
 			}
 			else {
@@ -112,6 +127,12 @@ function getRandomIntInclusive(min, max) {
 	return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * Generate an Auth-Token, given the user and the device ID (did)
+ * @param  {Object}   user
+ * @param  {String}   did - Device ID, optional value
+ * @param  {Function} callback
+ */
 function generateToken(user, did, callback) {
 	if (!did) {
 		// Generate a device ID
@@ -125,7 +146,7 @@ function generateToken(user, did, callback) {
 	}
 	
 	var jti = 1;
-	// Increment the token
+	// Increment the token version
 	if (typeof tokenVersions[did] === 'number') {
 		jti = tokenVersions[did] + 1;
 	}
@@ -154,6 +175,7 @@ function generateToken(user, did, callback) {
 			did: did
 		};
 		
+		// TODO: decide the expire time
 		var options = {
 			expiresIn: '15 days'
 		};

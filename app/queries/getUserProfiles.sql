@@ -1,3 +1,5 @@
+-- /auth/me
+
 SELECT
 	Username,
 	

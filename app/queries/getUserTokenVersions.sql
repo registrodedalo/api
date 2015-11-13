@@ -1,3 +1,6 @@
+-- *
+-- check Auth-Token header
+
 SELECT
 	TokenVersions
 
