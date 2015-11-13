@@ -6,7 +6,7 @@ DEFAULT COLLATE = 'utf8_general_ci';
 USE dedalo;
 
 -- Created by Vertabelo (http://vertabelo.com)
--- Last modification date: 2015-11-10 20:31:28.464
+-- Last modification date: 2015-11-13 15:18:22.954
 
 
 
@@ -69,23 +69,21 @@ CREATE TABLE Comunicazioni (
     CONSTRAINT Comunicazioni_pk PRIMARY KEY (ID)
 );
 
--- Table Dispostivi
-CREATE TABLE Dispostivi (
-    ID int  NOT NULL  AUTO_INCREMENT,
+-- Table Dispositivi
+CREATE TABLE Dispositivi (
+    DID varchar(15)  NOT NULL,
     Tipo int  NOT NULL,
     Creazione timestamp  NOT NULL,
     Aggiornamento timestamp  NOT NULL,
     DeviceUri text  NULL,
     IDUtente int  NOT NULL,
-    CONSTRAINT Dispostivi_pk PRIMARY KEY (ID)
+    CONSTRAINT Dispositivi_pk PRIMARY KEY (DID)
 );
 
 -- Table Genitori
 CREATE TABLE Genitori (
     ID int  NOT NULL  AUTO_INCREMENT,
     IDUtente int  NOT NULL,
-    Nome varchar(50)  NOT NULL,
-    Cognome varchar(50)  NOT NULL,
     CONSTRAINT Genitori_pk PRIMARY KEY (ID)
 );
 
@@ -110,8 +108,6 @@ CREATE TABLE IngressiUscite (
 -- Table Insegnanti
 CREATE TABLE Insegnanti (
     ID int  NOT NULL  AUTO_INCREMENT,
-    Nome varchar(50)  NOT NULL,
-    Cognome varchar(50)  NOT NULL,
     IDUtente int  NOT NULL,
     IDScuola int  NOT NULL,
     CONSTRAINT Insegnanti_pk PRIMARY KEY (ID)
@@ -135,7 +131,6 @@ CREATE TABLE Materie (
     ID int  NOT NULL  AUTO_INCREMENT,
     Nome varchar(100)  NOT NULL,
     NomeVisualizzato varchar(30)  NOT NULL,
-    Classe int  NOT NULL,
     CONSTRAINT Materie_pk PRIMARY KEY (ID)
 );
 
@@ -184,13 +179,6 @@ CREATE TABLE RelGenitoriStudenti (
     CONSTRAINT RelGenitoriStudenti_pk PRIMARY KEY (IDGenitore)
 );
 
--- Table RelMaterieInsegnanti
-CREATE TABLE RelMaterieInsegnanti (
-    IDMateria int  NOT NULL,
-    IDInsegnante int  NOT NULL,
-    CONSTRAINT RelMaterieInsegnanti_pk PRIMARY KEY (IDMateria,IDInsegnante)
-);
-
 -- Table RelOreLezioneInsegnanti
 CREATE TABLE RelOreLezioneInsegnanti (
     IDOraLezione int  NOT NULL,
@@ -224,8 +212,6 @@ CREATE TABLE Scuole (
 -- Table Studenti
 CREATE TABLE Studenti (
     ID int  NOT NULL  AUTO_INCREMENT,
-    Nome varchar(50)  NOT NULL,
-    Cognome varchar(50)  NOT NULL,
     DataNascita date  NOT NULL,
     CodiceFiscale varchar(16)  NOT NULL,
     Residenza text  NOT NULL,
@@ -242,9 +228,12 @@ CREATE TABLE Utenti (
     ID int  NOT NULL  AUTO_INCREMENT,
     Username varchar(50)  NOT NULL,
     Password binary(60)  NOT NULL,
+    Nome varchar(50)  NOT NULL,
+    Cognome varchar(50)  NOT NULL,
     U2FEnabled bool  NOT NULL  DEFAULT false,
     U2F text  NULL,
-    TokenVersions json  NULL,
+    TokenVersions text  NULL,
+    UNIQUE INDEX Utenti_ak_1 (Username),
     CONSTRAINT Utenti_pk PRIMARY KEY (ID)
 );
 
@@ -317,10 +306,10 @@ ALTER TABLE Classi ADD CONSTRAINT Classi_Scuola FOREIGN KEY Classi_Scuola (IDScu
 
 ALTER TABLE CollaboratoriScolastici ADD CONSTRAINT CollaboratoreScolastico_Utenti FOREIGN KEY CollaboratoreScolastico_Utenti (IDUtente)
     REFERENCES Utenti (ID);
--- Reference:  Dispostivi_Utenti (table: Dispostivi)
+-- Reference:  Dispostivi_Utenti (table: Dispositivi)
 
 
-ALTER TABLE Dispostivi ADD CONSTRAINT Dispostivi_Utenti FOREIGN KEY Dispostivi_Utenti (IDUtente)
+ALTER TABLE Dispositivi ADD CONSTRAINT Dispostivi_Utenti FOREIGN KEY Dispostivi_Utenti (IDUtente)
     REFERENCES Utenti (ID);
 -- Reference:  Genitori_Utenti (table: Genitori)
 
@@ -352,11 +341,6 @@ ALTER TABLE Lezioni ADD CONSTRAINT Lezioni_Classi FOREIGN KEY Lezioni_Classi (ID
 
 ALTER TABLE Lezioni ADD CONSTRAINT Lezioni_Insegnanti FOREIGN KEY Lezioni_Insegnanti (IDInsegnante)
     REFERENCES Insegnanti (ID);
--- Reference:  Materie_Classi (table: Materie)
-
-
-ALTER TABLE Materie ADD CONSTRAINT Materie_Classi FOREIGN KEY Materie_Classi (Classe)
-    REFERENCES Classi (ID);
 -- Reference:  NoteClasse_Classi (table: NoteClasse)
 
 
@@ -422,16 +406,6 @@ ALTER TABLE RelGenitoriStudenti ADD CONSTRAINT RelGenitoriStudenti_Genitori FORE
 
 ALTER TABLE RelGenitoriStudenti ADD CONSTRAINT RelGenitoriStudenti_Studenti FOREIGN KEY RelGenitoriStudenti_Studenti (IDStudente)
     REFERENCES Studenti (ID);
--- Reference:  RelMaterieProfessori_Materie (table: RelMaterieInsegnanti)
-
-
-ALTER TABLE RelMaterieInsegnanti ADD CONSTRAINT RelMaterieProfessori_Materie FOREIGN KEY RelMaterieProfessori_Materie (IDMateria)
-    REFERENCES Materie (ID);
--- Reference:  RelMaterieProfessori_Professori (table: RelMaterieInsegnanti)
-
-
-ALTER TABLE RelMaterieInsegnanti ADD CONSTRAINT RelMaterieProfessori_Professori FOREIGN KEY RelMaterieProfessori_Professori (IDInsegnante)
-    REFERENCES Insegnanti (ID);
 -- Reference:  RelOreLezioneInsegnanti_Insegnanti (table: RelOreLezioneInsegnanti)
 
 
