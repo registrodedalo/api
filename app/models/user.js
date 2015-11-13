@@ -79,7 +79,6 @@ function verify(token, callback) {
 /**
  * Check params['username'] and params['password'],
  * generate a new token for the device (params['did'] optional)
- * 
  * @param  {Object}   params
  * @param  {Function} callback
  */
