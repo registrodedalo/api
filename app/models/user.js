@@ -61,6 +61,9 @@ function verify(token, callback) {
 				return;
 			}
 			else {
+				user['ID'] = id,
+				user['Username'] = username;
+				
 				// ** FINALLY **
 				callback(null, user, did);
 			}
@@ -166,5 +169,49 @@ function generateToken(user, did, callback) {
 	});
 }
 
+/**
+ * Return the currently logged-in user profile
+ * @param  {Number}   userID - ID of the user
+ * @param  {Function} callback
+ */
+function me(userId, callback) {
+	var query = {
+		sql: db.queries.get('getUserProfiles'),
+		values: [userId, userId, userId, userId]
+	};
+	
+	db.query(query, function(err, users) {
+		if (err) {
+			callback('serverError');
+			return;
+		}
+		
+		if (users.length != 1) {
+			callback('userNotFound');
+			return;
+		}
+		
+		var user = users[0];
+		
+		// es.
+		// { Username: 'nome.cognome', Nome: 'Nome', Cognome: 'Cognome',
+		//   Insegnante: 1, Studente: 0, Collaboratore: 0 }
+		var profiles = [];
+		if (user['Insegnante'] === 1) profiles.push('insegnante');
+		if (user['Studente'] === 1) profiles.push('studente');
+		if (user['Collaboratore'] === 1) profiles.push('collaboratore');
+		
+		var res = {
+			username: user['Username'],
+			profili: profiles,
+			nome: user['Nome'],
+			cognome: user['Cognome']
+		};
+		
+		callback(null, res);
+	});
+}
+
 module.exports.verify = verify;
 module.exports.authenticate = authenticate;
+module.exports.me = me;
